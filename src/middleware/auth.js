@@ -11,6 +11,7 @@ export default function authMiddleware(req, res, next) {
     
     req.userId = decoded.id;
     req.userRole = decoded.role; 
+    req.userEmail = decoded.email; 
     
     next();
   } catch (err) {
@@ -20,11 +21,20 @@ export default function authMiddleware(req, res, next) {
 
 export function checkAdmin(req, res, next) {
   
-  console.log("Tentativa de acesso ADM - Role do usuário:", req.userRole);
+  console.log(`Tentativa de acesso ADM - Email: ${req.userEmail} | Role: ${req.userRole}`);
 
-  if (req.userRole === 'admin') {
+  
+  const isAuthorized = 
+    req.userRole === 'admin' || 
+    (req.userEmail && req.userEmail.toLowerCase() === 'futbrasss@gmail.com');
+
+  if (isAuthorized) {
     next(); 
   } else {
-    res.status(403).json({ msg: "Acesso negado. Esta área é restrita para o administrador." });
+    res.status(403).json({ 
+      msg: "Acesso negado. Esta área é restrita para o administrador.",
+      received_email: req.userEmail,
+      received_role: req.userRole
+    });
   }
 }

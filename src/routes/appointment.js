@@ -1,6 +1,6 @@
 import express from 'express';
 import prisma from '../config/prisma.js';
-import authMiddleware from '../middleware/auth.js';
+import authMiddleware, { checkAdmin } from '../middleware/auth.js'; 
 
 const router = express.Router();
 
@@ -31,9 +31,29 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 
+router.get('/admin/all', authMiddleware, checkAdmin, async (req, res) => {
+  try {
+    const todosAgendamentos = await prisma.appointment.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            phone: true
+          }
+        }
+      },
+      orderBy: { date: 'asc' }
+    });
+    res.json(todosAgendamentos);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar todos os agendamentos." });
+  }
+});
+
+
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    
     await prisma.appointment.deleteMany({
       where: { id: req.params.id, userId: req.userId }
     });

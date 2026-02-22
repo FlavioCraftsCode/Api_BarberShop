@@ -9,7 +9,6 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
   const { name, email, password, phone } = req.body;
   try {
-    
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) {
       return res.status(400).json({ error: "Este e-mail já está em uso." });
@@ -39,20 +38,21 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    
     const user = await prisma.user.findUnique({ where: { email } });
-    
     
     if (user && await bcrypt.compare(password, user.password)) {
       
       
       const token = jwt.sign(
-        { id: user.id, role: user.role }, 
+        { 
+          id: user.id, 
+          email: user.email, 
+          role: user.role 
+        }, 
         process.env.JWT_SECRET, 
         { expiresIn: '1d' }
       );
 
-      
       res.json({ 
         token, 
         user: { 
@@ -63,7 +63,6 @@ router.post('/login', async (req, res) => {
         } 
       });
     } else {
-      
       res.status(400).json({ msg: "E-mail ou senha incorretos." });
     }
   } catch (error) {
